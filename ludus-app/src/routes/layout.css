@@ -1,0 +1,214 @@
+@import 'tailwindcss';
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: 'Nunito', 'Nunito Fallback', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Silkscreen', ui-monospace, monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-error: var(--error);
+  --color-ring: var(--ring);
+
+  /* Balatro accents */
+  --color-red: var(--red);
+  --color-red-deep: var(--red-deep);
+  --color-blue: var(--blue);
+  --color-blue-deep: var(--blue-deep);
+  --color-chips: var(--blue);
+  --color-mult: var(--red);
+  --color-gold: var(--gold);
+  --color-gold-deep: var(--gold-deep);
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1.125rem;
+}
+
+/* ─── Tema Escuro — Feltro clássico do Balatro (padrão) ─────────────────────── */
+:root {
+  color-scheme: dark;
+
+  --background: #1a1e2a;
+  --foreground: #fdf3d8;
+  --surface: #2a3044;
+  --surface-2: #353c54;
+
+  --border: #4a5372;
+  --border-subtle: #333a52;
+
+  --text-primary: #fdf3d8;
+  --text-secondary: #b6bfd8;
+  --text-tertiary: #7c86a6;
+
+  --error: #ff4b45;
+  --ring: #ffc93c;
+
+  --red: #ff4b45;
+  --red-deep: #a81f22;
+  --blue: #0093ff;
+  --blue-deep: #0a4f9e;
+  --gold: #ffc93c;
+  --gold-deep: #b8801a;
+
+  /* swirl */
+  --felt-base: #14172180;
+  --swirl-red: #ff4b45;
+  --swirl-blue: #0093ff;
+  --swirl-opacity: 0.32;
+}
+
+/* ─── Tema Claro — Mesa de cartas creme ─────────────────────────────────────── */
+.light {
+  color-scheme: light;
+
+  --background: #efe6cf;
+  --foreground: #2a2418;
+  --surface: #fffaec;
+  --surface-2: #f5ecd4;
+
+  --border: #cdbf9a;
+  --border-subtle: #e2d6b8;
+
+  --text-primary: #2a2418;
+  --text-secondary: #6b6146;
+  --text-tertiary: #a3966f;
+
+  --error: #d63a34;
+  --ring: #e0a91f;
+
+  --red: #ec4038;
+  --red-deep: #a81f22;
+  --blue: #1479d6;
+  --blue-deep: #0a4f9e;
+  --gold: #e0a91f;
+  --gold-deep: #b8801a;
+
+  --felt-base: #efe6cf00;
+  --swirl-red: #ec4038;
+  --swirl-blue: #1479d6;
+  --swirl-opacity: 0.18;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    background-color: var(--background);
+  }
+  body {
+    @apply text-foreground font-sans antialiased;
+    background-color: transparent;
+  }
+  ::selection {
+    background: var(--gold);
+    color: #1a1e2a;
+  }
+}
+
+/* ─── Fundo animado estilo Balatro (redemoinho vermelho/azul) ────────────────── */
+.balatro-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background-color: var(--felt-base);
+}
+.balatro-bg::before {
+  content: '';
+  position: absolute;
+  inset: -60%;
+  background: conic-gradient(
+    from 0deg,
+    var(--swirl-red),
+    var(--swirl-blue),
+    var(--swirl-red),
+    var(--swirl-blue),
+    var(--swirl-red)
+  );
+  filter: blur(90px);
+  opacity: var(--swirl-opacity);
+  animation: balatro-spin 45s linear infinite;
+}
+.balatro-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 50% 40%,
+    transparent 0%,
+    transparent 45%,
+    color-mix(in srgb, var(--background) 65%, transparent) 100%
+  );
+}
+
+@keyframes balatro-spin {
+  from { transform: rotate(0deg) scale(1.1); }
+  to { transform: rotate(360deg) scale(1.1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .balatro-bg::before { animation: none; }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gold);
+  background-clip: padding-box;
+}
+
+@keyframes card-in {
+  0% { opacity: 0; transform: translateY(28px) rotate(-6deg) scale(0.9); }
+  100% { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); }
+}
+
+@keyframes score-pop {
+  0% { transform: scale(0.6) rotate(-8deg); opacity: 0; }
+  50% { transform: scale(1.25) rotate(4deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+@keyframes chip-count {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px) rotate(-2deg); }
+  40% { transform: translateX(8px) rotate(2deg); }
+  60% { transform: translateX(-6px) rotate(-1deg); }
+  80% { transform: translateX(6px) rotate(1deg); }
+}
+
+@keyframes float-idle {
+  0%, 100% { transform: translateY(0) rotate(-1deg); }
+  50% { transform: translateY(-6px) rotate(1deg); }
+}
+
+.animate-card-in { animation: card-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.animate-score-pop { animation: score-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.animate-chip-count { animation: chip-count 0.35s ease-out both; }
+.animate-shake { animation: shake 0.5s ease-in-out both; }
+.animate-float-idle { animation: float-idle 4s ease-in-out infinite; }
+
