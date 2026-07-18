@@ -1,4 +1,5 @@
 import { supabase } from '$lib/supabase';
+import { ui } from '$lib/stores/ui.svelte';
 
 export class GameState {
 	// Local state
@@ -17,10 +18,12 @@ export class GameState {
 	timeRemaining = $state(0);
 	status = $state<'lobby' | 'question_active' | 'leaderboard'>('lobby');
 	leaderboard = $state<{ id: string; name: string; score: number }[]>([]);
+	timeLimit = $state(20);
 	
 	// Host quiz data
 	questionsList = $state<any[]>([]);
 	currentQuestionIndex = $state(0);
+	timePerQuestion = $state(20);
 	private channel = $state<any>(null);
 
 	async createRoom() {
@@ -49,6 +52,22 @@ export class GameState {
 
 		this.roomId = data.id;
 
+		// Save to localStorage for History
+		if (typeof window !== 'undefined') {
+			const historyRaw = localStorage.getItem('ludus_history') || '[]';
+			try {
+				const history = JSON.parse(historyRaw);
+				history.push({
+					id: data.id,
+					pin: data.pin,
+					date: new Date().toISOString()
+				});
+				localStorage.setItem('ludus_history', JSON.stringify(history));
+			} catch (e) {
+				console.error('Failed to save history', e);
+			}
+		}
+
 		// Subscribe to players joining this room
 		this.channel = supabase.channel(`room:${this.roomId}`)
 			.on(
@@ -70,7 +89,7 @@ export class GameState {
 			.single();
 
 		if (roomError || !roomData) {
-			alert('Sala não encontrada!');
+			ui.alert('Sala não encontrada!');
 			return false;
 		}
 
@@ -87,7 +106,7 @@ export class GameState {
 			.single();
 
 		if (playerError) {
-			alert('Erro ao entrar na sala.');
+			ui.alert('Erro ao entrar na sala.');
 			return false;
 		}
 
@@ -105,6 +124,7 @@ export class GameState {
 						this.currentQuestion = q.text;
 						this.options = q.options;
 						this.correctId = q.correctId;
+						this.timeLimit = q.timeLimit || 20;
 					} else if (payload.new.status === 'leaderboard') {
 						this.fetchLeaderboard();
 					}
@@ -125,10 +145,10 @@ export class GameState {
 		}
 	}
 
-	async hostStartQuestion(questionText: string, options: any[], correctId: number) {
+	async hostStartQuestion(questionText: string, options: any[], correctId: number, timeLimit: number) {
 		if (!this.roomId) return;
 		
-		const current_question = { text: questionText, options, correctId };
+		const current_question = { text: questionText, options, correctId, timeLimit };
 		
 		await supabase
 			.from('rooms')

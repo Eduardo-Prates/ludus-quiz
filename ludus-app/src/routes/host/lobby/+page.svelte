@@ -3,6 +3,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 
 	import { game } from '$lib/stores/game.svelte';
+	import { ui } from '$lib/stores/ui.svelte';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 
@@ -10,9 +11,10 @@
 		await game.createRoom();
 	});
 
-	function startGame() {
+	async function startGame() {
 		if (game.players.length === 0) {
-			if (!confirm('Nenhum jogador entrou. Iniciar mesmo assim?')) return;
+			const proceed = await ui.confirm('Nenhum jogador entrou. Iniciar mesmo assim?', 'Sala Vazia');
+			if (!proceed) return;
 		}
 		goto('/host/game');
 	}

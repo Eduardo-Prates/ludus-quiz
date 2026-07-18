@@ -14,11 +14,11 @@
 		
 		isQuestionActive = true;
 		
-		await game.hostStartQuestion(currentQ.text, currentQ.options, currentQ.correctId);
+		await game.hostStartQuestion(currentQ.text, currentQ.options, currentQ.correctId, game.timePerQuestion);
 		
 		questionTimer = setTimeout(() => {
 			showLeaderboard();
-		}, 20000);
+		}, game.timePerQuestion * 1000);
 	}
 
 	async function showLeaderboard() {
@@ -108,10 +108,16 @@
 					<div class="text-2xl font-sans text-emerald-400">Todas as perguntas foram respondidas!</div>
 				{/if}
 			{:else}
-				<div class="text-3xl font-mono text-blue animate-pulse mb-8">
-					Pergunta em andamento...
+				<div class="text-4xl font-sans font-bold text-text-primary mb-12 [text-shadow:0_2px_0_var(--border)]">
+					{currentQ.text}
 				</div>
-				<div class="mb-8 text-text-secondary">Os jogadores estão respondendo em seus celulares.</div>
+				<div class="grid grid-cols-2 gap-4 w-full mb-8">
+					{#each currentQ.options as option}
+						<div class="flex items-center justify-center p-6 rounded-xl border-4 border-border/20 {option.color} text-white font-bold text-2xl shadow-lg">
+							{option.text}
+						</div>
+					{/each}
+				</div>
 				<Button variant="destructive" onclick={showLeaderboard}>
 					Encerrar Tempo Agora
 				</Button>

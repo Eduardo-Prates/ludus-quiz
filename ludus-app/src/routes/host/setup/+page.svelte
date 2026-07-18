@@ -2,6 +2,7 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { game } from '$lib/stores/game.svelte';
+	import { ui } from '$lib/stores/ui.svelte';
 	import { goto } from '$app/navigation';
 
 	let fileContent = $state('');
@@ -85,7 +86,7 @@
 
 	function finalizeSetup() {
 		if (game.questionsList.length === 0) {
-			alert('Adicione pelo menos uma pergunta válida!');
+			ui.alert('Adicione pelo menos uma pergunta válida!');
 			return;
 		}
 		// Go to lobby, which will create the room
@@ -127,7 +128,20 @@
 		<!-- Editor / Preview Zone -->
 		<div class="w-full flex justify-between items-center mb-6">
 			<h2 class="text-2xl font-sans font-bold text-text-primary">Perguntas ({game.questionsList.length})</h2>
-			<Button variant="primary" onclick={finalizeSetup}>Criar Sala com essas Perguntas</Button>
+			<div class="flex items-center gap-4">
+				<div class="flex items-center gap-2 bg-surface/50 px-4 py-2 rounded-xl border border-border">
+					<label class="text-sm font-bold text-text-secondary" for="timeInput">Tempo (segundos):</label>
+					<input 
+						id="timeInput"
+						type="number" 
+						min="5" 
+						max="300" 
+						bind:value={game.timePerQuestion} 
+						class="w-16 bg-transparent text-text-primary font-mono text-center outline-none border-b border-gold"
+					/>
+				</div>
+				<Button variant="primary" onclick={finalizeSetup}>Criar Sala com essas Perguntas</Button>
+			</div>
 		</div>
 
 		<div class="w-full flex flex-col gap-6 mb-12">
