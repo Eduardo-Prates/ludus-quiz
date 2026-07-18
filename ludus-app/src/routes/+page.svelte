@@ -51,8 +51,9 @@
 			</Button>
 		</form>
 		
-		<div class="mt-8 pt-4 border-t-2 border-border-subtle text-center">
+		<div class="mt-8 pt-4 border-t-2 border-border-subtle flex flex-col gap-4 text-center">
 			<a href="/host/setup" class="text-sm font-mono text-text-tertiary hover:text-gold transition-colors uppercase">Sou Apresentador</a>
+			<a href="/host/history" class="text-sm font-mono text-text-tertiary hover:text-emerald-400 transition-colors uppercase">Ver Histórico de Partidas</a>
 		</div>
 	</Card>
 </div>

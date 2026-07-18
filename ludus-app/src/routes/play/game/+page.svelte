@@ -23,42 +23,29 @@
 	// When status changes to question_active, reset and start
 	$effect(() => {
 		if (currentStatus === 'question_active' && previousStatus !== 'question_active') {
-			resetForNewQuestion();
-			startTimer();
+			selectedAnswer = null;
+			isCorrect = null;
+			pointsEarned = 0;
+			timeRemaining = game.timeLimit * 1000;
+			
+			timerInterval = setInterval(() => {
+				timeRemaining -= 100;
+				if (timeRemaining <= 0) {
+					clearInterval(timerInterval);
+					timeRemaining = 0;
+					if (selectedAnswer === null) {
+						selectedAnswer = -1; 
+						isCorrect = false;
+					}
+				}
+			}, 100);
 		}
 		previousStatus = currentStatus;
 	});
 
-	function resetForNewQuestion() {
-		selectedAnswer = null;
-		isCorrect = null;
-		pointsEarned = 0;
-	}
-
 	onDestroy(() => {
 		clearInterval(timerInterval);
 	});
-
-	function startTimer() {
-		clearInterval(timerInterval);
-		timeRemaining = TOTAL_TIME;
-		timerInterval = setInterval(() => {
-			if (timeRemaining > 0) {
-				timeRemaining -= 0.1;
-			} else {
-				timeRemaining = 0;
-				clearInterval(timerInterval);
-				if (selectedAnswer === null) {
-					handleTimeUp();
-				}
-			}
-		}, 100);
-	}
-
-	function handleTimeUp() {
-		selectedAnswer = -1; // -1 indicates timeout
-		isCorrect = false;
-	}
 
 	const defaultOptions = [
 		{ id: 1, text: 'Vermelho', color: 'bg-red' },
@@ -75,7 +62,7 @@
 		setTimeout(() => {
 			isCorrect = id === game.correctId; 
 			if (isCorrect) {
-				const percentage = timeRemaining / TOTAL_TIME;
+				const percentage = timeRemaining / (game.timeLimit * 1000);
 				pointsEarned = Math.round(percentage * 1000); 
 				game.addScore(pointsEarned); 
 			}
@@ -103,7 +90,7 @@
 		<div class="w-full bg-surface border-2 border-border h-6 rounded-full overflow-hidden [box-shadow:0_4px_0_rgba(0,0,0,0.28)]">
 			<div 
 				class="h-full bg-gold transition-all duration-100 ease-linear"
-				style="width: {(timeRemaining / TOTAL_TIME) * 100}%; background-color: {timeRemaining < 5 ? 'var(--error)' : 'var(--gold)'};"
+				style="width: {(timeRemaining / (game.timeLimit * 1000)) * 100}%; background-color: {timeRemaining < 5000 ? 'var(--error)' : 'var(--gold)'};"
 			></div>
 		</div>
 		{/if}
