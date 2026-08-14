@@ -14,7 +14,7 @@
 		
 		isQuestionActive = true;
 		
-		await game.hostStartQuestion(currentQ.text, currentQ.options, currentQ.correctId, game.timePerQuestion);
+		await game.hostStartQuestion(currentQ.text, currentQ.options, currentQ.correctId, game.timePerQuestion, currentQ.imageUrl);
 		
 		questionTimer = setTimeout(() => {
 			showLeaderboard();
@@ -49,80 +49,95 @@
 	}
 </script>
 
-<div class="min-h-screen flex flex-col p-8 items-center justify-center">
+<div class="min-h-screen flex flex-col p-4 sm:p-8 items-center overflow-y-auto">
 	
 	{#if game.status === 'leaderboard'}
 		<!-- Leaderboard Podium View -->
-		<div class="w-full max-w-4xl animate-card-in">
-			<h1 class="text-5xl font-mono text-gold mb-12 text-center [text-shadow:0_4px_0_var(--gold-deep)]">PÓDIO GERAL</h1>
+		<div class="w-full max-w-4xl my-auto animate-card-in">
+			<h1 class="text-3xl sm:text-5xl font-mono text-gold mb-8 sm:mb-12 text-center [text-shadow:0_4px_0_var(--gold-deep)]">PÓDIO GERAL</h1>
 			
 			<div class="flex flex-col gap-4">
 				{#each game.leaderboard.slice(0, 5) as player, i}
-					<Card class="flex flex-row items-center justify-between p-6 {i === 0 ? 'border-gold border-4 bg-gold/10' : ''}">
-						<div class="flex items-center gap-6">
-							<span class="text-4xl font-mono {i === 0 ? 'text-gold' : 'text-text-tertiary'}">#{i + 1}</span>
-							<span class="text-3xl font-sans font-bold text-text-primary">{player.name}</span>
+					<Card class="flex flex-row items-center justify-between p-4 sm:p-6 {i === 0 ? 'border-gold border-4 bg-gold/10' : ''}">
+						<div class="flex items-center gap-4 sm:gap-6">
+							<span class="text-2xl sm:text-4xl font-mono {i === 0 ? 'text-gold' : 'text-text-tertiary'}">#{i + 1}</span>
+							<span class="text-xl sm:text-3xl font-sans font-bold text-text-primary">{player.name}</span>
 						</div>
-						<span class="text-3xl font-mono text-text-primary">{player.score} <span class="text-lg text-text-tertiary">PTS</span></span>
+						<span class="text-xl sm:text-3xl font-mono text-text-primary">{player.score} <span class="text-sm sm:text-lg text-text-tertiary">PTS</span></span>
 					</Card>
 				{/each}
 
 				{#if game.leaderboard.length === 0}
-					<div class="text-center text-text-secondary text-xl">Nenhum jogador pontuou ainda.</div>
+					<div class="text-center text-text-secondary text-lg sm:text-xl">Nenhum jogador pontuou ainda.</div>
 				{/if}
 			</div>
 
-			<div class="mt-12 text-center">
+			<div class="mt-8 sm:mt-12 text-center">
 				{#if isFinished}
-					<div class="text-3xl font-mono text-emerald-400 mb-6">FIM DE JOGO!</div>
-					<div class="flex gap-4 justify-center">
-						<Button variant="secondary" class="text-xl py-4 px-8" onclick={() => window.location.href='/'}>
+					<div class="text-2xl sm:text-3xl font-mono text-emerald-400 mb-6">FIM DE JOGO!</div>
+					<div class="flex flex-col sm:flex-row gap-4 justify-center">
+						<Button variant="secondary" class="text-lg sm:text-xl py-3 px-6 sm:py-4 sm:px-8" onclick={() => window.location.href='/'}>
 							Voltar ao Início
 						</Button>
-						<Button variant="primary" class="text-xl py-4 px-8 bg-emerald-500 border-emerald-700 text-[#1a1e2a] hover:brightness-110 [box-shadow:0_4px_0_var(--emerald-700)]" onclick={exportToCSV}>
+						<Button variant="primary" class="text-lg sm:text-xl py-3 px-6 sm:py-4 sm:px-8 bg-emerald-500 border-emerald-700 text-[#1a1e2a] hover:brightness-110 [box-shadow:0_4px_0_var(--emerald-700)]" onclick={exportToCSV}>
 							Exportar para Excel (.CSV)
 						</Button>
 					</div>
 				{:else}
-					<Button variant="primary" class="text-xl py-4 px-8" onclick={startNextQuestion}>
+					<Button variant="primary" class="text-lg sm:text-xl py-3 px-6 sm:py-4 sm:px-8" onclick={startNextQuestion}>
 						Próxima Pergunta ({game.currentQuestionIndex + 1}/{game.questionsList.length})
 					</Button>
 				{/if}
 			</div>
 		</div>
 	{:else}
-		<!-- Default Host Panel -->
-		<Card class="w-full max-w-2xl text-center p-12">
-			<h1 class="text-4xl font-mono text-gold mb-8">Painel do Apresentador</h1>
-			
-			<div class="text-xl text-text-primary mb-8 font-sans">
-				Jogadores Conectados: <span class="font-bold text-2xl">{game.players.length}</span>
-			</div>
+		{#if !isQuestionActive}
+			<!-- Default Host Panel (Lobby) -->
+			<Card class="w-full max-w-5xl my-auto text-center p-4 sm:p-8 md:p-12">
+				<h1 class="text-2xl sm:text-3xl md:text-4xl font-mono text-gold mb-6 md:mb-8">Painel do Apresentador</h1>
+				
+				<div class="text-lg sm:text-xl text-text-primary mb-6 md:mb-8 font-sans">
+					Jogadores Conectados: <span class="font-bold text-xl sm:text-2xl">{game.players.length}</span>
+				</div>
 
-			{#if !isQuestionActive}
 				{#if !isFinished}
-					<Button variant="primary" class="text-2xl py-6 px-12" onclick={startNextQuestion}>
+					<Button variant="primary" class="text-xl sm:text-2xl py-4 px-8 sm:py-6 sm:px-12" onclick={startNextQuestion}>
 						Lançar Pergunta {game.currentQuestionIndex + 1}
 					</Button>
 				{:else}
-					<div class="text-2xl font-sans text-emerald-400">Todas as perguntas foram respondidas!</div>
+					<div class="text-xl sm:text-2xl font-sans text-emerald-400">Todas as perguntas foram respondidas!</div>
 				{/if}
-			{:else}
-				<div class="text-4xl font-sans font-bold text-text-primary mb-12 [text-shadow:0_2px_0_var(--border)]">
-					{currentQ.text}
-				</div>
-				<div class="grid grid-cols-2 gap-4 w-full mb-8">
-					{#each currentQ.options as option}
-						<div class="flex items-center justify-center p-6 rounded-xl border-4 border-border/20 {option.color} text-white font-bold text-2xl shadow-lg">
-							{option.text}
-						</div>
-					{/each}
-				</div>
-				<Button variant="destructive" onclick={showLeaderboard}>
-					Encerrar Tempo Agora
-				</Button>
-			{/if}
-		</Card>
+			</Card>
+		{:else}
+			<!-- Active Question View (Matches Participant Screen) -->
+			<div class="flex-1 flex flex-col justify-between w-full h-full pb-4 sm:pb-8">
+				<header class="w-full max-w-5xl mx-auto flex justify-between items-center mt-4">
+					<div class="text-lg sm:text-xl font-mono text-text-secondary uppercase">Pergunta {game.currentQuestionIndex + 1}</div>
+					<Button variant="destructive" class="text-xs sm:text-sm px-4 py-2" onclick={showLeaderboard}>
+						Encerrar Tempo
+					</Button>
+				</header>
+				
+				<main class="flex-1 flex items-center justify-center flex-col gap-6 text-center w-full px-2 sm:px-4">
+					{#if currentQ.imageUrl}
+						<img src={currentQ.imageUrl} alt="Imagem da pergunta" class="max-w-full max-h-[30vh] sm:max-h-[40vh] object-contain rounded-xl shadow-lg border-4 border-border/50" />
+					{/if}
+					<div class="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-sans font-bold text-text-primary leading-tight break-words uppercase [text-shadow:0_2px_0_var(--border)] max-w-5xl">
+						{currentQ.text}
+					</div>
+				</main>
+				
+				<footer class="w-full max-w-5xl mx-auto mt-auto">
+					<div class="grid grid-cols-2 gap-3 sm:gap-4 w-full min-h-[16rem] auto-rows-fr">
+						{#each currentQ.options as option}
+							<div class="flex items-center justify-center p-4 sm:p-6 md:p-8 rounded-xl border-[3px] sm:border-4 border-border/20 {option.color} text-white font-sans font-bold uppercase text-base sm:text-xl md:text-2xl lg:text-3xl leading-tight text-center break-words [box-shadow:0_5px_0_rgba(0,0,0,0.5)] [text-shadow:0_2px_4px_rgba(0,0,0,0.6)]">
+								{option.text}
+							</div>
+						{/each}
+					</div>
+				</footer>
+			</div>
+		{/if}
 	{/if}
 </div>
 

@@ -128,19 +128,24 @@
 				<div class="text-5xl font-mono text-error animate-shake [text-shadow:0_4px_0_var(--red-deep)]">Incorreto</div>
 				<div class="text-xl text-text-secondary">Você não pontuou nesta rodada.</div>
 			{:else}
-				<div class="text-3xl font-sans font-bold text-text-primary">{game.currentQuestion || 'Pergunta...'}</div>
+				<div class="flex-1 flex flex-col items-center justify-center w-full max-w-5xl mx-auto gap-4">
+					{#if game.imageUrl}
+						<img src={game.imageUrl} alt="Imagem da pergunta" class="max-w-full max-h-[25vh] object-contain rounded-xl shadow-md border-4 border-border/50" />
+					{/if}
+					<div class="text-2xl sm:text-3xl md:text-4xl font-sans font-bold text-text-primary leading-tight px-2 break-words uppercase">{game.currentQuestion || 'Pergunta...'}</div>
+				</div>
 			{/if}
 		{/if}
 	</main>
 
 	<!-- Bottom Action Area -->
-	<footer class="w-full max-w-4xl mx-auto">
+	<footer class="w-full max-w-4xl mx-auto mt-auto">
 		{#if currentStatus === 'question_active'}
-		<div class="grid grid-cols-2 gap-4 h-64">
+		<div class="grid grid-cols-2 gap-3 sm:gap-4 w-full flex-1 min-h-[16rem] auto-rows-fr">
 			{#each (game.options.length ? game.options : defaultOptions) as option}
 				<Button 
 					variant="answer"
-					class="w-full h-full text-2xl {option.color || defaultOptions[option.id-1].color} text-white {selectedAnswer !== null && selectedAnswer !== option.id ? 'opacity-30 grayscale scale-95' : ''} {selectedAnswer === option.id ? 'border-gold border-4 scale-105' : ''}"
+					class="w-full h-full p-2 sm:p-4 {option.color || defaultOptions[option.id-1].color} {selectedAnswer !== null && selectedAnswer !== option.id ? 'opacity-30 grayscale scale-95' : ''} {selectedAnswer === option.id ? 'border-gold border-4 scale-[1.02]' : ''}"
 					onclick={() => selectAnswer(option.id)}
 					disabled={selectedAnswer !== null}
 				>

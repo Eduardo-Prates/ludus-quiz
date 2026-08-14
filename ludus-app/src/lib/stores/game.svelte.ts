@@ -13,6 +13,7 @@ export class GameState {
 
 	// Current question info
 	currentQuestion = $state<string | null>(null);
+	imageUrl = $state<string | null>(null);
 	options = $state<any[]>([]);
 	correctId = $state<number | null>(null);
 	timeRemaining = $state(0);
@@ -122,6 +123,7 @@ export class GameState {
 					if (payload.new.status === 'question_active') {
 						const q = payload.new.current_question;
 						this.currentQuestion = q.text;
+						this.imageUrl = q.imageUrl || null;
 						this.options = q.options;
 						this.correctId = q.correctId;
 						this.timeLimit = q.timeLimit || 20;
@@ -145,10 +147,10 @@ export class GameState {
 		}
 	}
 
-	async hostStartQuestion(questionText: string, options: any[], correctId: number, timeLimit: number) {
+	async hostStartQuestion(questionText: string, options: any[], correctId: number, timeLimit: number, imageUrl?: string) {
 		if (!this.roomId) return;
 		
-		const current_question = { text: questionText, options, correctId, timeLimit };
+		const current_question = { text: questionText, imageUrl: imageUrl || null, options, correctId, timeLimit };
 		
 		await supabase
 			.from('rooms')

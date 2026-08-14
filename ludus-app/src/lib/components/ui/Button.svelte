@@ -13,7 +13,7 @@
 		destructive: 'bg-red border-red-deep text-white hover:brightness-110 [box-shadow:0_4px_0_var(--red-deep)] active:[box-shadow:0_0px_0_var(--red-deep)]',
 		secondary: 'bg-surface border-border text-text-primary hover:border-gold [box-shadow:0_4px_0_var(--border)] active:[box-shadow:0_0px_0_var(--border)]',
 		accent: 'bg-blue border-blue-deep text-white hover:brightness-110 [box-shadow:0_4px_0_var(--blue-deep)] active:[box-shadow:0_0px_0_var(--blue-deep)]',
-		answer: 'border-border text-white hover:-translate-y-1 hover:border-white/50 [box-shadow:0_5px_0_rgba(0,0,0,0.5)] font-mono text-xl active:[box-shadow:0_0px_0_rgba(0,0,0,0.5)]'
+		answer: 'border-border text-white hover:-translate-y-1 hover:border-white/50 [box-shadow:0_5px_0_rgba(0,0,0,0.5)] font-sans font-bold uppercase text-sm sm:text-base md:text-lg leading-tight break-words whitespace-normal active:[box-shadow:0_0px_0_rgba(0,0,0,0.5)] [text-shadow:0_2px_4px_rgba(0,0,0,0.6)]'
 	};
 
 </script>
