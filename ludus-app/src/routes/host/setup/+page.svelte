@@ -23,8 +23,31 @@
 				if (currentQuestion && currentQuestion.options.length > 0) {
 					questions.push(currentQuestion);
 				}
+				
+				let rawText = trimmed.replace('# ', '').trim();
+				let imageUrl = null;
+				
+				// Buscar URL na pergunta
+				const urlMatch = rawText.match(/(https?:\/\/[^\s]+)/);
+				if (urlMatch) {
+					const foundUrl = urlMatch[1];
+					// Remover a URL do texto visível e limpar pontuações residuais
+					rawText = rawText.replace(foundUrl, '').trim();
+					
+					// Converter link do Google Drive para link direto de imagem
+					// O Google bloqueou agressivamente uc?id e thumbnail recentemente.
+					// A melhor rota alternativa CDN atual é lh3.googleusercontent.com
+					const driveMatch = foundUrl.match(/file\/d\/([a-zA-Z0-9_-]+)/);
+					if (driveMatch) {
+						imageUrl = `https://lh3.googleusercontent.com/d/${driveMatch[1]}`;
+					} else {
+						imageUrl = foundUrl;
+					}
+				}
+
 				currentQuestion = {
-					text: trimmed.replace('# ', '').trim(),
+					text: rawText,
+					imageUrl: imageUrl,
 					options: [],
 					correctId: null
 				};
@@ -154,12 +177,17 @@
 						Excluir
 					</button>
 					
-					<!-- Make question text editable -->
-					<input 
-						type="text" 
-						bind:value={question.text} 
-						class="text-2xl font-bold bg-transparent border-b border-border/50 focus:border-gold outline-none w-11/12 mb-4 text-text-primary transition-colors"
-					/>
+					<!-- Make question text editable and show image if any -->
+					<div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-4 w-11/12">
+						{#if question.imageUrl}
+							<img src={question.imageUrl} alt="Preview da imagem" class="w-32 h-20 object-cover rounded-lg border-2 border-border shadow-md" />
+						{/if}
+						<input 
+							type="text" 
+							bind:value={question.text} 
+							class="text-2xl font-bold bg-transparent border-b border-border/50 focus:border-gold outline-none w-full text-text-primary transition-colors"
+						/>
+					</div>
 					
 					<div class="grid grid-cols-2 gap-2 mt-2">
 						{#each question.options as option}

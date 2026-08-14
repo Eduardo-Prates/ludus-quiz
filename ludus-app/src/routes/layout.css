@@ -140,6 +140,10 @@
   filter: blur(90px);
   opacity: var(--swirl-opacity);
   animation: balatro-spin 45s linear infinite;
+  
+  /* Hardware Acceleration para GPUs Mobile */
+  will-change: transform;
+  transform: translateZ(0);
 }
 .balatro-bg::after {
   content: '';
@@ -154,12 +158,20 @@
 }
 
 @keyframes balatro-spin {
-  from { transform: rotate(0deg) scale(1.1); }
-  to { transform: rotate(360deg) scale(1.1); }
+  from { transform: rotate(0deg) scale(1.1) translateZ(0); }
+  to { transform: rotate(360deg) scale(1.1) translateZ(0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .balatro-bg::before { animation: none; }
+}
+
+/* Desliga a animação e reduz o peso do blur em celulares para poupar bateria e GPU */
+@media (max-width: 768px) {
+  .balatro-bg::before { 
+    animation: none;
+    filter: blur(50px);
+  }
 }
 
 /* Scrollbar styling */
