@@ -4,12 +4,13 @@ import { ui } from '$lib/stores/ui.svelte';
 export class GameState {
 	// Local state
 	score = $state(0);
+	correctAnswersCount = $state(0);
 	playerName = $state('');
 	playerId = $state<string | null>(null);
 	roomId = $state<string | null>(null);
 	roomPin = $state('');
 	isHost = $state(false);
-	players = $state<{ id: string; name: string; score: number }[]>([]);
+	players = $state<{ id: string; name: string; score: number, correct_answers?: number }[]>([]);
 
 	// Current question info
 	currentQuestion = $state<string | null>(null);
@@ -18,7 +19,7 @@ export class GameState {
 	correctId = $state<number | null>(null);
 	timeRemaining = $state(0);
 	status = $state<'lobby' | 'question_active' | 'leaderboard'>('lobby');
-	leaderboard = $state<{ id: string; name: string; score: number }[]>([]);
+	leaderboard = $state<{ id: string; name: string; score: number, correct_answers: number }[]>([]);
 	timeLimit = $state(20);
 	
 	// Host quiz data
@@ -34,6 +35,7 @@ export class GameState {
 		this.status = 'lobby';
 		this.currentQuestionIndex = 0;
 		this.score = 0;
+		this.correctAnswersCount = 0;
 
 		// Generate random 6-digit PIN
 		const pin = Math.floor(100000 + Math.random() * 900000).toString();
@@ -137,12 +139,15 @@ export class GameState {
 		return true;
 	}
 
-	async addScore(points: number) {
+	async addScore(points: number, isCorrect: boolean = false) {
 		this.score += points;
+		if (isCorrect) {
+			this.correctAnswersCount++;
+		}
 		if (this.playerId) {
 			await supabase
 				.from('players')
-				.update({ score: this.score })
+				.update({ score: this.score, correct_answers: this.correctAnswersCount })
 				.eq('id', this.playerId);
 		}
 	}
@@ -177,7 +182,7 @@ export class GameState {
 
 		const { data, error } = await supabase
 			.from('players')
-			.select('id, name, score')
+			.select('id, name, score, correct_answers')
 			.eq('room_id', this.roomId)
 			.order('score', { ascending: false });
 
