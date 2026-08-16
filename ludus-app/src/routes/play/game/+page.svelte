@@ -64,7 +64,7 @@
 			if (isCorrect) {
 				const percentage = timeRemaining / (game.timeLimit * 1000);
 				pointsEarned = Math.round(percentage * 1000); 
-				game.addScore(pointsEarned); 
+				game.addScore(pointsEarned, true); 
 			}
 		}, 1000);
 	}

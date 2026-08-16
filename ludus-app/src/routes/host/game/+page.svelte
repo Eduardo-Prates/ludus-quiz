@@ -30,11 +30,11 @@
 
 	function exportToCSV() {
 		// Criar cabeçalhos
-		let csvContent = "Posicao,Jogador,Pontuacao\n";
+		let csvContent = "Posicao,Jogador,Pontuacao,Acertos\n";
 		
 		// Preencher linhas ordenadas pelo score
 		game.leaderboard.forEach((player, index) => {
-			csvContent += `${index + 1},${player.name},${player.score}\n`;
+			csvContent += `${index + 1},${player.name},${player.score},${player.correct_answers || 0}\n`;
 		});
 
 		// Criar o Blob e forçar o download
@@ -111,28 +111,32 @@
 		{:else}
 			<!-- Active Question View (Matches Participant Screen) -->
 			<div class="flex-1 flex flex-col justify-between w-full h-full pb-4 sm:pb-8">
-				<header class="w-full max-w-5xl mx-auto flex justify-between items-center mt-4">
+				<header class="w-full max-w-4xl mx-auto flex justify-between items-center mt-4 px-4">
 					<div class="text-lg sm:text-xl font-mono text-text-secondary uppercase">Pergunta {game.currentQuestionIndex + 1}</div>
 					<Button variant="destructive" class="text-xs sm:text-sm px-4 py-2" onclick={showLeaderboard}>
 						Encerrar Tempo
 					</Button>
 				</header>
 				
-				<main class="flex-1 flex items-center justify-center flex-col gap-6 text-center w-full px-2 sm:px-4">
+				<main class="flex-1 flex items-center justify-center flex-col gap-4 text-center w-full px-2 max-w-5xl mx-auto">
 					{#if currentQ.imageUrl}
-						<img src={currentQ.imageUrl} alt="Imagem da pergunta" class="max-w-full max-h-[30vh] sm:max-h-[40vh] object-contain rounded-xl shadow-lg border-4 border-border/50" />
+						<img src={currentQ.imageUrl} alt="Imagem da pergunta" class="max-w-full max-h-[25vh] object-contain rounded-xl shadow-md border-4 border-border/50" />
 					{/if}
-					<div class="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-sans font-bold text-text-primary leading-tight break-words uppercase [text-shadow:0_2px_0_var(--border)] max-w-5xl">
+					<div class="text-2xl sm:text-3xl md:text-4xl font-sans font-bold text-text-primary leading-tight break-words uppercase">
 						{currentQ.text}
 					</div>
 				</main>
 				
-				<footer class="w-full max-w-5xl mx-auto mt-auto">
+				<footer class="w-full max-w-4xl mx-auto mt-auto px-4 sm:px-0">
 					<div class="grid grid-cols-2 gap-3 sm:gap-4 w-full min-h-[16rem] auto-rows-fr">
 						{#each currentQ.options as option}
-							<div class="flex items-center justify-center p-4 sm:p-6 md:p-8 rounded-xl border-[3px] sm:border-4 border-border/20 {option.color} text-white font-sans font-bold uppercase text-base sm:text-xl md:text-2xl lg:text-3xl leading-tight text-center break-words [box-shadow:0_5px_0_rgba(0,0,0,0.5)] [text-shadow:0_2px_4px_rgba(0,0,0,0.6)]">
+							<Button 
+								variant="answer"
+								class="w-full h-full p-2 sm:p-4 {option.color}"
+								disabled={true}
+							>
 								{option.text}
-							</div>
+							</Button>
 						{/each}
 					</div>
 				</footer>

@@ -45,7 +45,8 @@ CREATE TABLE players (
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
   room_id uuid REFERENCES rooms(id) ON DELETE CASCADE,
   name text NOT NULL,
-  score integer DEFAULT 0
+  score integer DEFAULT 0,
+  correct_answers integer DEFAULT 0
 );
 ```
 
