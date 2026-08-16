@@ -24,7 +24,7 @@
 	<header class="flex justify-between items-center mb-12">
 		<Card class="py-4 px-8 bg-surface/80 backdrop-blur-md">
 			<span class="text-lg text-text-tertiary font-mono uppercase tracking-widest">Acesse:</span>
-			<div class="text-3xl font-mono text-text-primary">ludus.app</div>
+			<div class="text-3xl font-mono text-text-primary">ludus-quiz.vercel.app</div>
 		</Card>
 
 		<Card class="py-4 px-12 bg-surface/80 backdrop-blur-md border-gold text-center">
