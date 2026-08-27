@@ -4,7 +4,11 @@
 	import { game } from '$lib/stores/game.svelte';
 
 	let isQuestionActive = $state(false);
+	let isRevealPhase = $state(false);
+	let timeRemaining = $state(0);
 	let questionTimer: ReturnType<typeof setTimeout>;
+	let timerInterval: ReturnType<typeof setInterval>;
+	let revealTimer: ReturnType<typeof setTimeout>;
 
 	let currentQ = $derived(game.questionsList[game.currentQuestionIndex]);
 	let isFinished = $derived(game.currentQuestionIndex >= game.questionsList.length);
@@ -13,17 +17,34 @@
 		if (isFinished) return;
 		
 		isQuestionActive = true;
+		isRevealPhase = false;
+		timeRemaining = game.timePerQuestion * 1000;
 		
 		await game.hostStartQuestion(currentQ.text, currentQ.options, currentQ.correctId, game.timePerQuestion, currentQ.imageUrl);
 		
+		timerInterval = setInterval(() => {
+			timeRemaining -= 100;
+			if (timeRemaining <= 0) {
+				clearInterval(timerInterval);
+				timeRemaining = 0;
+			}
+		}, 100);
+
 		questionTimer = setTimeout(() => {
-			showLeaderboard();
+			clearInterval(timerInterval);
+			isRevealPhase = true;
+			revealTimer = setTimeout(() => {
+				showLeaderboard();
+			}, 4000);
 		}, game.timePerQuestion * 1000);
 	}
 
 	async function showLeaderboard() {
 		clearTimeout(questionTimer);
+		clearTimeout(revealTimer);
+		clearInterval(timerInterval);
 		isQuestionActive = false;
+		isRevealPhase = false;
 		game.currentQuestionIndex++;
 		await game.hostShowLeaderboard();
 	}
@@ -111,18 +132,31 @@
 		{:else}
 			<!-- Active Question View (Matches Participant Screen) -->
 			<div class="flex-1 flex flex-col justify-between w-full h-full pb-4 sm:pb-8">
-				<header class="w-full max-w-4xl mx-auto flex justify-between items-center mt-4 px-4">
-					<div class="text-lg sm:text-xl font-mono text-text-secondary uppercase">Pergunta {game.currentQuestionIndex + 1}</div>
-					<Button variant="destructive" class="text-xs sm:text-sm px-4 py-2" onclick={showLeaderboard}>
-						Encerrar Tempo
-					</Button>
+				<header class="w-full max-w-4xl mx-auto flex flex-col gap-4 mt-4 px-4">
+					<div class="flex justify-between items-center w-full">
+						<div class="text-lg sm:text-xl font-mono text-text-secondary uppercase">Pergunta {game.currentQuestionIndex + 1}</div>
+						<Button variant="destructive" class="text-xs sm:text-sm px-4 py-2" onclick={showLeaderboard}>
+							Encerrar Tempo
+						</Button>
+					</div>
+					<!-- Timer Progress Bar -->
+					{#if !isRevealPhase}
+						<div class="w-full bg-surface border-2 border-border h-6 rounded-full overflow-hidden [box-shadow:0_4px_0_rgba(0,0,0,0.28)]">
+							<div 
+								class="h-full bg-gold transition-all duration-100 ease-linear"
+								style="width: {(timeRemaining / (game.timePerQuestion * 1000)) * 100}%; background-color: {timeRemaining < 5000 ? 'var(--error)' : 'var(--gold)'};"
+							></div>
+						</div>
+					{:else}
+						<div class="text-2xl font-mono text-emerald-400 text-center animate-pulse">Tempo Esgotado!</div>
+					{/if}
 				</header>
 				
 				<main class="flex-1 flex items-center justify-center flex-col gap-4 text-center w-full px-2 max-w-5xl mx-auto">
 					{#if currentQ.imageUrl}
-						<img src={currentQ.imageUrl} alt="Imagem da pergunta" class="max-w-full max-h-[25vh] object-contain rounded-xl shadow-md border-4 border-border/50" />
+						<img src={currentQ.imageUrl} alt="Imagem da pergunta" class="max-w-full max-h-[30vh] md:max-h-[45vh] lg:max-h-[55vh] object-contain rounded-xl shadow-md border-4 border-border/50" />
 					{/if}
-					<div class="text-2xl sm:text-3xl md:text-4xl font-sans font-bold text-text-primary leading-tight break-words uppercase">
+					<div class="text-2xl sm:text-3xl md:text-4xl font-sans font-bold text-text-primary leading-tight break-words">
 						{currentQ.text}
 					</div>
 				</main>
@@ -132,10 +166,17 @@
 						{#each currentQ.options as option}
 							<Button 
 								variant="answer"
-								class="w-full h-full p-2 sm:p-4 {option.color}"
+								class="w-full h-full p-2 sm:p-4 {option.color} {isRevealPhase && option.id !== currentQ.correctId ? 'opacity-30 grayscale scale-95' : ''} {isRevealPhase && option.id === currentQ.correctId ? 'border-gold border-4 scale-[1.02] animate-pulse' : ''}"
 								disabled={true}
 							>
-								{option.text}
+								<div class="flex flex-col items-center justify-center gap-2 w-full h-full">
+									{#if option.imageUrl}
+										<img src={option.imageUrl} alt="Opção" class="max-h-20 sm:max-h-32 lg:max-h-40 object-contain rounded bg-white border border-border/50 p-1 shadow-sm" />
+									{/if}
+									{#if option.text}
+										<span>{option.text}</span>
+									{/if}
+								</div>
 							</Button>
 						{/each}
 					</div>

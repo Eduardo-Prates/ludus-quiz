@@ -7,6 +7,7 @@
 
 	let fileContent = $state('');
 	let isDragging = $state(false);
+	let focusedQuestionIndex = $state(0);
 
 	const colorPalette = ['bg-red', 'bg-blue', 'bg-gold', 'bg-emerald-500'];
 
@@ -51,20 +52,39 @@
 					options: [],
 					correctId: null
 				};
-			} else if (trimmed.startsWith('- [ ]') || trimmed.startsWith('- [x]')) {
-				if (currentQuestion) {
-					const isCorrect = trimmed.startsWith('- [x]');
-					const optionText = trimmed.replace(/- \[[ x]\] /, '').trim();
-					const optionId = currentQuestion.options.length + 1;
-					
-					currentQuestion.options.push({
-						id: optionId,
-						text: optionText,
-						color: colorPalette[(optionId - 1) % colorPalette.length]
-					});
+			} else {
+				const lowerTrimmed = trimmed.toLowerCase();
+				if (lowerTrimmed.startsWith('- [ ]') || lowerTrimmed.startsWith('- [x]')) {
+					if (currentQuestion) {
+						const isCorrect = lowerTrimmed.startsWith('- [x]');
+						let optionText = trimmed.replace(/^- \[[ xX]\] /, '').trim();
+						let optionImageUrl = null;
+						
+						const urlMatch = optionText.match(/(https?:\/\/[^\s]+)/);
+						if (urlMatch) {
+							const foundUrl = urlMatch[1];
+							optionText = optionText.replace(foundUrl, '').trim();
+							
+							const driveMatch = foundUrl.match(/file\/d\/([a-zA-Z0-9_-]+)/);
+							if (driveMatch) {
+								optionImageUrl = `https://lh3.googleusercontent.com/d/${driveMatch[1]}`;
+							} else {
+								optionImageUrl = foundUrl;
+							}
+						}
+						
+						const optionId = currentQuestion.options.length + 1;
+						
+						currentQuestion.options.push({
+							id: optionId,
+							text: optionText,
+							imageUrl: optionImageUrl,
+							color: colorPalette[(optionId - 1) % colorPalette.length]
+						});
 
-					if (isCorrect) {
-						currentQuestion.correctId = optionId;
+						if (isCorrect) {
+							currentQuestion.correctId = optionId;
+						}
 					}
 				}
 			}
@@ -117,7 +137,8 @@
 	}
 </script>
 
-<div class="min-h-screen flex flex-col p-8 items-center max-w-4xl mx-auto">
+<div class="min-h-screen flex p-4 sm:p-8 gap-8 max-w-7xl mx-auto">
+	<div class="flex-1 flex flex-col w-full max-w-3xl">
 	<h1 class="text-4xl font-mono text-gold mb-8 [text-shadow:0_3px_0_var(--gold-deep)]">Setup do Jogo</h1>
 
 	{#if game.questionsList.length === 0}
@@ -169,7 +190,8 @@
 
 		<div class="w-full flex flex-col gap-6 mb-12">
 			{#each game.questionsList as question, qIndex}
-				<Card class="relative">
+				<div onfocusin={() => focusedQuestionIndex = qIndex} onmouseenter={() => focusedQuestionIndex = qIndex} role="presentation">
+					<Card class="relative transition-all duration-200 {focusedQuestionIndex === qIndex ? 'border-gold shadow-md shadow-gold/20 scale-[1.01]' : ''}">
 					<button 
 						class="absolute top-4 right-4 text-error hover:text-red-deep font-bold"
 						onclick={() => deleteQuestion(qIndex)}
@@ -191,23 +213,29 @@
 					
 					<div class="grid grid-cols-2 gap-2 mt-2">
 						{#each question.options as option}
-							<div class="flex items-center gap-2 p-2 rounded-lg border-2 {question.correctId === option.id ? 'border-emerald-500 bg-emerald-500/10' : 'border-border/50'}">
-								<input 
-									type="radio" 
-									name="correct-{qIndex}" 
-									checked={question.correctId === option.id}
-									onchange={() => question.correctId = option.id}
-									class="w-4 h-4 cursor-pointer"
-								/>
-								<input 
-									type="text" 
-									bind:value={option.text} 
-									class="bg-transparent outline-none flex-1 font-mono text-sm text-text-secondary focus:text-text-primary"
-								/>
+							<div class="flex flex-col items-start gap-2 p-2 rounded-lg border-2 {question.correctId === option.id ? 'border-emerald-500 bg-emerald-500/10' : 'border-border/50'}">
+								<div class="flex items-center w-full gap-2">
+									<input 
+										type="radio" 
+										name="correct-{qIndex}" 
+										checked={question.correctId === option.id}
+										onchange={() => question.correctId = option.id}
+										class="w-4 h-4 cursor-pointer flex-shrink-0"
+									/>
+									<input 
+										type="text" 
+										bind:value={option.text} 
+										class="bg-transparent outline-none flex-1 font-mono text-sm text-text-secondary focus:text-text-primary"
+									/>
+								</div>
+								{#if option.imageUrl}
+									<img src={option.imageUrl} alt="Imagem da opção" class="h-16 w-full object-contain bg-black/20 rounded border border-border/30" />
+								{/if}
 							</div>
 						{/each}
 					</div>
 				</Card>
+				</div>
 			{/each}
 		</div>
 		
@@ -217,5 +245,56 @@
 				<input type="file" accept=".md" class="hidden" onchange={handleFileUpload} />
 			</label>
 		</div>
+	{/if}
+	</div>
+
+	<!-- Phone Preview -->
+	{#if game.questionsList.length > 0 && game.questionsList[focusedQuestionIndex]}
+	<div class="hidden lg:block w-80 shrink-0">
+		<div class="sticky top-8 bg-background border-4 border-border rounded-[2.5rem] shadow-xl overflow-hidden h-[700px] flex flex-col relative [box-shadow:0_8px_0_var(--border)]">
+			<!-- Mock notch -->
+			<div class="absolute top-0 inset-x-0 h-6 bg-border rounded-b-xl w-32 mx-auto z-10"></div>
+			
+			<div class="flex-1 flex flex-col overflow-y-auto p-4 bg-surface/30">
+				<header class="flex flex-col gap-2 mt-6">
+					<div class="flex justify-between items-center w-full">
+						<div class="w-full bg-surface border-2 border-border h-3 rounded-full overflow-hidden">
+							<div class="h-full bg-gold w-full"></div>
+						</div>
+					</div>
+				</header>
+
+				<main class="flex-1 flex items-center justify-center flex-col gap-2 text-center mt-4">
+					{#if game.questionsList[focusedQuestionIndex].imageUrl}
+						<img src={game.questionsList[focusedQuestionIndex].imageUrl} alt="Imagem" class="max-w-full max-h-32 object-contain rounded border-2 border-border/50" />
+					{/if}
+					<div class="!text-[15px] font-sans font-bold text-text-primary !leading-snug break-words px-2">
+						{game.questionsList[focusedQuestionIndex].text || 'Pergunta...'}
+					</div>
+				</main>
+
+				<footer class="w-full mt-auto pt-4 pb-2">
+					<div class="grid grid-cols-2 gap-2 w-full">
+						{#each game.questionsList[focusedQuestionIndex].options as option}
+							<Button 
+								variant="answer"
+								class="w-full h-24 p-2 {option.color} !text-[11px] sm:!text-[11px] md:!text-[11px] lg:!text-[11px] !leading-[1.2]"
+								disabled={true}
+							>
+								<div class="flex flex-col items-center justify-center gap-1 w-full h-full">
+									{#if option.imageUrl}
+										<img src={option.imageUrl} alt="img" class="max-h-12 object-contain rounded bg-white p-0.5 shadow-sm" />
+									{/if}
+									{#if option.text}
+										<span class="line-clamp-4">{option.text}</span>
+									{/if}
+								</div>
+							</Button>
+						{/each}
+					</div>
+				</footer>
+			</div>
+		</div>
+	</div>
 	{/if}
 </div>

@@ -6,6 +6,7 @@
 	let selectedAnswer = $state<number | null>(null);
 	let isCorrect = $state<boolean | null>(null);
 	let pointsEarned = $state(0);
+	let showResult = $state(false);
 	
 	// Timer logic
 	const TOTAL_TIME = 20; // 20 seconds per question
@@ -17,6 +18,7 @@
 	// We watch the status from the store
 	let currentStatus = $derived(game.status);
 	let previousStatus = $state(game.status);
+	let shuffledOptions = $state<any[]>([]);
 
 	let rankIndex = $derived(game.leaderboard.findIndex(p => p.id === game.playerId));
 
@@ -26,7 +28,11 @@
 			selectedAnswer = null;
 			isCorrect = null;
 			pointsEarned = 0;
+			showResult = false;
 			timeRemaining = game.timeLimit * 1000;
+			
+			// Embaralha as opções de forma única para este jogador
+			shuffledOptions = game.options ? [...game.options].sort(() => Math.random() - 0.5) : [];
 			
 			timerInterval = setInterval(() => {
 				timeRemaining -= 100;
@@ -37,6 +43,7 @@
 						selectedAnswer = -1; 
 						isCorrect = false;
 					}
+					showResult = true;
 				}
 			}, 100);
 		}
@@ -53,20 +60,20 @@
 		{ id: 3, text: 'Amarelo', color: 'bg-gold' },
 		{ id: 4, text: 'Verde', color: 'bg-emerald-500' }
 	];
+	const colorPalette = ['bg-red', 'bg-blue', 'bg-gold', 'bg-emerald-500'];
 
 	function selectAnswer(id: number) {
 		if (selectedAnswer !== null || timeRemaining <= 0) return;
 		selectedAnswer = id;
-		clearInterval(timerInterval);
 		
-		setTimeout(() => {
-			isCorrect = id === game.correctId; 
-			if (isCorrect) {
-				const percentage = timeRemaining / (game.timeLimit * 1000);
-				pointsEarned = Math.round(percentage * 1000); 
-				game.addScore(pointsEarned, true); 
-			}
-		}, 1000);
+		isCorrect = id === game.correctId; 
+		if (isCorrect) {
+			const percentage = timeRemaining / (game.timeLimit * 1000);
+			pointsEarned = Math.round(percentage * 1000); 
+			game.addScore(pointsEarned, true); 
+		} else {
+			isCorrect = false;
+		}
 	}
 </script>
 
@@ -116,23 +123,24 @@
 				<div class="text-3xl font-mono text-text-primary animate-pulse">Carregando Placar...</div>
 			{/if}
 		{:else if currentStatus === 'question_active'}
-			{#if selectedAnswer !== null && isCorrect === null}
-				<div class="text-4xl font-mono text-text-primary animate-float-idle [text-shadow:0_4px_0_var(--border)]">Enviando...</div>
-			{:else if isCorrect === true}
+			{#if selectedAnswer !== null && !showResult}
+				<div class="text-4xl font-mono text-text-primary animate-float-idle [text-shadow:0_4px_0_var(--border)]">Enviado!</div>
+				<div class="text-xl text-text-secondary mt-4">Aguarde o tempo esgotar...</div>
+			{:else if showResult && isCorrect === true}
 				<div class="text-5xl font-mono text-emerald-400 animate-score-pop [text-shadow:0_4px_0_theme(colors.emerald.700)]">Correto!</div>
 				<div class="text-2xl font-mono text-gold animate-shake">+{pointsEarned} PTS</div>
-			{:else if selectedAnswer === -1}
+			{:else if showResult && selectedAnswer === -1}
 				<div class="text-5xl font-mono text-error animate-shake [text-shadow:0_4px_0_var(--red-deep)]">Tempo Esgotado!</div>
 				<div class="text-xl text-text-secondary">Seja mais rápido na próxima.</div>
-			{:else if isCorrect === false}
+			{:else if showResult && isCorrect === false}
 				<div class="text-5xl font-mono text-error animate-shake [text-shadow:0_4px_0_var(--red-deep)]">Incorreto</div>
 				<div class="text-xl text-text-secondary">Você não pontuou nesta rodada.</div>
 			{:else}
 				<div class="flex-1 flex flex-col items-center justify-center w-full max-w-5xl mx-auto gap-4">
 					{#if game.imageUrl}
-						<img src={game.imageUrl} alt="Imagem da pergunta" class="max-w-full max-h-[25vh] object-contain rounded-xl shadow-md border-4 border-border/50" />
+						<img src={game.imageUrl} alt="Imagem da pergunta" class="max-w-full max-h-[30vh] md:max-h-[45vh] lg:max-h-[55vh] object-contain rounded-xl shadow-md border-4 border-border/50" />
 					{/if}
-					<div class="text-2xl sm:text-3xl md:text-4xl font-sans font-bold text-text-primary leading-tight px-2 break-words uppercase">{game.currentQuestion || 'Pergunta...'}</div>
+					<div class="text-2xl sm:text-3xl md:text-4xl font-sans font-bold text-text-primary leading-tight px-2 break-words">{game.currentQuestion || 'Pergunta...'}</div>
 				</div>
 			{/if}
 		{/if}
@@ -142,14 +150,21 @@
 	<footer class="w-full max-w-4xl mx-auto mt-auto">
 		{#if currentStatus === 'question_active'}
 		<div class="grid grid-cols-2 gap-3 sm:gap-4 w-full flex-1 min-h-[16rem] auto-rows-fr">
-			{#each (game.options.length ? game.options : defaultOptions) as option}
+			{#each (shuffledOptions.length ? shuffledOptions : defaultOptions) as option, index}
 				<Button 
 					variant="answer"
-					class="w-full h-full p-2 sm:p-4 {option.color || defaultOptions[option.id-1].color} {selectedAnswer !== null && selectedAnswer !== option.id ? 'opacity-30 grayscale scale-95' : ''} {selectedAnswer === option.id ? 'border-gold border-4 scale-[1.02]' : ''}"
+					class="w-full h-full p-2 sm:p-4 {colorPalette[index % colorPalette.length]} {selectedAnswer !== null && selectedAnswer !== option.id ? 'opacity-30 grayscale scale-95' : ''} {selectedAnswer === option.id ? 'border-gold border-4 scale-[1.02]' : ''}"
 					onclick={() => selectAnswer(option.id)}
 					disabled={selectedAnswer !== null}
 				>
-					{option.text}
+					<div class="flex flex-col items-center justify-center gap-2 w-full h-full">
+						{#if option.imageUrl}
+							<img src={option.imageUrl} alt="Opção" class="max-h-20 sm:max-h-32 lg:max-h-40 object-contain rounded bg-white border border-border/50 p-1 shadow-sm" />
+						{/if}
+						{#if option.text}
+							<span>{option.text}</span>
+						{/if}
+					</div>
 				</Button>
 			{/each}
 		</div>
