@@ -37,6 +37,11 @@ export class GameState {
 		this.score = 0;
 		this.correctAnswersCount = 0;
 
+		if (this.channel) {
+			supabase.removeChannel(this.channel);
+			this.channel = null;
+		}
+
 		// Generate random 6-digit PIN
 		const pin = Math.floor(100000 + Math.random() * 900000).toString();
 		this.roomPin = pin;
@@ -84,6 +89,20 @@ export class GameState {
 	}
 
 	async joinRoom(pin: string, name: string) {
+		// Reset previous player state if rejoining without reload
+		this.score = 0;
+		this.correctAnswersCount = 0;
+		this.leaderboard = [];
+		this.currentQuestion = null;
+		this.imageUrl = null;
+		this.options = [];
+		this.correctId = null;
+		
+		if (this.channel) {
+			supabase.removeChannel(this.channel);
+			this.channel = null;
+		}
+
 		// Find room
 		const { data: roomData, error: roomError } = await supabase
 			.from('rooms')

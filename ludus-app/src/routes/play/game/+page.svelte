@@ -42,6 +42,8 @@
 					if (selectedAnswer === null) {
 						selectedAnswer = -1; 
 						isCorrect = false;
+					} else if (isCorrect) {
+						game.addScore(pointsEarned, true);
 					}
 					showResult = true;
 				}
@@ -70,7 +72,7 @@
 		if (isCorrect) {
 			const percentage = timeRemaining / (game.timeLimit * 1000);
 			pointsEarned = Math.round(percentage * 1000); 
-			game.addScore(pointsEarned, true); 
+			// O score só será enviado para o banco quando o tempo esgotar (anti-cola)
 		} else {
 			isCorrect = false;
 		}
