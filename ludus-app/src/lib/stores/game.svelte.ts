@@ -22,6 +22,7 @@ export class GameState {
 	leaderboard = $state<{ id: string; name: string; score: number, correct_answers: number }[]>([]);
 	timeLimit = $state(20);
 	answeredCount = $state(0);
+	isRevealPhase = $state(false);
 	
 	// Host quiz data
 	questionsList = $state<any[]>([]);
@@ -152,6 +153,7 @@ export class GameState {
 				(payload) => {
 					this.status = payload.new.status;
 					if (payload.new.status === 'question_active') {
+						this.isRevealPhase = false;
 						const q = payload.new.current_question;
 						this.currentQuestion = q.text;
 						this.imageUrl = q.imageUrl || null;
@@ -159,10 +161,14 @@ export class GameState {
 						this.correctId = q.correctId;
 						this.timeLimit = q.timeLimit || 20;
 					} else if (payload.new.status === 'leaderboard') {
+						this.isRevealPhase = false;
 						this.fetchLeaderboard();
 					}
 				}
 			)
+			.on('broadcast', { event: 'reveal_phase' }, () => {
+				this.isRevealPhase = true;
+			})
 			.subscribe();
 
 		return true;
@@ -185,6 +191,7 @@ export class GameState {
 		if (!this.roomId) return;
 		
 		this.answeredCount = 0;
+		this.isRevealPhase = false;
 		
 		const current_question = { text: questionText, imageUrl: imageUrl || null, options, correctId, timeLimit };
 		
@@ -194,6 +201,17 @@ export class GameState {
 			.eq('id', this.roomId);
 			
 		this.status = 'question_active';
+	}
+
+	hostBroadcastReveal() {
+		if (this.channel) {
+			this.channel.send({
+				type: 'broadcast',
+				event: 'reveal_phase',
+				payload: {}
+			});
+		}
+		this.isRevealPhase = true;
 	}
 
 	notifyAnswered() {
@@ -216,7 +234,7 @@ export class GameState {
 			
 		this.status = 'leaderboard';
 		// Aguarda os celulares dos alunos enviarem as pontuações ao banco antes de buscar
-		await new Promise(resolve => setTimeout(resolve, 1200));
+		await new Promise(resolve => setTimeout(resolve, 3000));
 		await this.fetchLeaderboard();
 	}
 

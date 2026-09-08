@@ -22,26 +22,17 @@
 
 	let rankIndex = $derived(game.leaderboard.findIndex(p => p.id === game.playerId));
 
+	let scoreSubmitted = $state(false);
+
 	// When status changes to question_active, reset and start
 	$effect(() => {
-		if (currentStatus === 'leaderboard' && previousStatus === 'question_active') {
-			// O apresentador encerrou o tempo antecipadamente
-			clearInterval(timerInterval);
-			if (timeRemaining > 0 && selectedAnswer !== null && selectedAnswer !== -1) {
-				if (isCorrect) {
-					game.addScore(pointsEarned, true);
-				}
-			}
-			showResult = true;
-			timeRemaining = 0;
-		}
-
 		if (currentStatus === 'question_active' && previousStatus !== 'question_active') {
 			clearInterval(timerInterval);
 			selectedAnswer = null;
 			isCorrect = null;
 			pointsEarned = 0;
 			showResult = false;
+			scoreSubmitted = false;
 			timeRemaining = game.timeLimit * 1000;
 			
 			// Embaralha as opções de forma única para este jogador
@@ -52,17 +43,26 @@
 				if (timeRemaining <= 0) {
 					clearInterval(timerInterval);
 					timeRemaining = 0;
-					if (selectedAnswer === null) {
-						selectedAnswer = -1; 
-						isCorrect = false;
-					} else if (isCorrect) {
-						game.addScore(pointsEarned, true);
-					}
-					showResult = true;
 				}
 			}, 100);
 		}
 		previousStatus = currentStatus;
+	});
+
+	// Quando o host entra na fase de revelação, mostra resultado e envia pontuação
+	$effect(() => {
+		if (game.isRevealPhase && !showResult && !scoreSubmitted) {
+			clearInterval(timerInterval);
+			timeRemaining = 0;
+			showResult = true;
+			scoreSubmitted = true;
+			if (selectedAnswer === null) {
+				selectedAnswer = -1;
+				isCorrect = false;
+			} else if (isCorrect) {
+				game.addScore(pointsEarned, true);
+			}
+		}
 	});
 
 	onDestroy(() => {
