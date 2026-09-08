@@ -17,10 +17,11 @@
 		if (isRevealPhase) return;
 		clearInterval(timerInterval);
 		isRevealPhase = true;
+		game.hostBroadcastReveal();
 		
 		revealTimer = setTimeout(() => {
 			showLeaderboard();
-		}, 4000);
+		}, 7000);
 	}
 
 	async function startNextQuestion() {
