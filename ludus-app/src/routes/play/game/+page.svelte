@@ -89,6 +89,8 @@
 		} else {
 			isCorrect = false;
 		}
+		
+		game.notifyAnswered();
 	}
 </script>
 
