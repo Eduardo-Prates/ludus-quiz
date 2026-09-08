@@ -24,7 +24,20 @@
 
 	// When status changes to question_active, reset and start
 	$effect(() => {
+		if (currentStatus === 'leaderboard' && previousStatus === 'question_active') {
+			// O apresentador encerrou o tempo antecipadamente
+			clearInterval(timerInterval);
+			if (timeRemaining > 0 && selectedAnswer !== null && selectedAnswer !== -1) {
+				if (isCorrect) {
+					game.addScore(pointsEarned, true);
+				}
+			}
+			showResult = true;
+			timeRemaining = 0;
+		}
+
 		if (currentStatus === 'question_active' && previousStatus !== 'question_active') {
+			clearInterval(timerInterval);
 			selectedAnswer = null;
 			isCorrect = null;
 			pointsEarned = 0;
@@ -76,6 +89,8 @@
 		} else {
 			isCorrect = false;
 		}
+		
+		game.notifyAnswered();
 	}
 </script>
 

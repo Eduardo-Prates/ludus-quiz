@@ -13,6 +13,16 @@
 	let currentQ = $derived(game.questionsList[game.currentQuestionIndex]);
 	let isFinished = $derived(game.currentQuestionIndex >= game.questionsList.length);
 
+	function triggerRevealPhase() {
+		if (isRevealPhase) return;
+		clearInterval(timerInterval);
+		isRevealPhase = true;
+		
+		revealTimer = setTimeout(() => {
+			showLeaderboard();
+		}, 4000);
+	}
+
 	async function startNextQuestion() {
 		if (isFinished) return;
 		
@@ -25,19 +35,18 @@
 		timerInterval = setInterval(() => {
 			timeRemaining -= 100;
 			if (timeRemaining <= 0) {
-				clearInterval(timerInterval);
 				timeRemaining = 0;
+				triggerRevealPhase();
 			}
 		}, 100);
-
-		questionTimer = setTimeout(() => {
-			clearInterval(timerInterval);
-			isRevealPhase = true;
-			revealTimer = setTimeout(() => {
-				showLeaderboard();
-			}, 4000);
-		}, game.timePerQuestion * 1000);
 	}
+
+	$effect(() => {
+		if (isQuestionActive && !isRevealPhase && game.players.length > 0 && game.answeredCount >= game.players.length) {
+			timeRemaining = 0;
+			triggerRevealPhase();
+		}
+	});
 
 	async function showLeaderboard() {
 		clearTimeout(questionTimer);
@@ -135,9 +144,9 @@
 				<header class="w-full max-w-4xl mx-auto flex flex-col gap-4 mt-4 px-4">
 					<div class="flex justify-between items-center w-full">
 						<div class="text-lg sm:text-xl font-mono text-text-secondary uppercase">Pergunta {game.currentQuestionIndex + 1}</div>
-						<Button variant="destructive" class="text-xs sm:text-sm px-4 py-2" onclick={showLeaderboard}>
-							Encerrar Tempo
-						</Button>
+						<div class="text-lg sm:text-xl font-sans font-bold text-text-primary bg-surface/50 px-4 py-1 rounded-full border border-border shadow-sm">
+							Respostas: <span class="text-gold">{game.answeredCount}</span> / {game.players.length}
+						</div>
 					</div>
 					<!-- Timer Progress Bar -->
 					{#if !isRevealPhase}
