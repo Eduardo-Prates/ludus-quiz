@@ -21,6 +21,7 @@ export class GameState {
 	status = $state<'lobby' | 'question_active' | 'leaderboard'>('lobby');
 	leaderboard = $state<{ id: string; name: string; score: number, correct_answers: number }[]>([]);
 	timeLimit = $state(20);
+	answeredCount = $state(0);
 	
 	// Host quiz data
 	questionsList = $state<any[]>([]);
@@ -77,7 +78,9 @@ export class GameState {
 		}
 
 		// Subscribe to players joining this room
-		this.channel = supabase.channel(`room:${this.roomId}`)
+		this.channel = supabase.channel(`room:${this.roomId}`, {
+			config: { broadcast: { self: true } }
+		})
 			.on(
 				'postgres_changes',
 				{ event: 'INSERT', schema: 'public', table: 'players', filter: `room_id=eq.${this.roomId}` },
@@ -85,6 +88,11 @@ export class GameState {
 					this.players = [...this.players, payload.new as any];
 				}
 			)
+			.on('broadcast', { event: 'player_answered' }, (payload) => {
+				if (this.isHost) {
+					this.answeredCount++;
+				}
+			})
 			.subscribe();
 	}
 
